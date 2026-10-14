@@ -15,13 +15,19 @@ import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
@@ -166,7 +172,7 @@ final class Dialogs {
 
     // ── Dialogs that are the user's to answer ───────────────────────────────────────
 
-    private static final String FOR_USER_ONLY = "com.anthropic.claudecode.eclipse.dialogForUserOnly";
+    private static final String FOR_USER_ONLY = "com.anthropic.claudecode.eclipse.adt.dialogForUserOnly";
 
     /** Marks a dialog as one that asks the person at the keyboard: listed, never pressed. */
     static void markForUserOnly(Shell shell) {
@@ -197,6 +203,18 @@ final class Dialogs {
     static boolean asksAboutTrust(String title, String text, String classNames) {
         return mentions(classNames, TRUST_IN_CLASS) || mentions(title, TRUST_IN_TITLE)
                 || mentions(text, TRUST_IN_TEXT);
+    }
+
+    /**
+     * Whether a dialog asks for a transport request, as ADT's "Select a Transport Request"
+     * ("Transportauftrag auswählen") does for an object that needs one. Which request a change
+     * goes into is the user's decision in Claude Code ADT: such a dialog is listed and never
+     * filled in or pressed, and the tool that raised it waits for the user's answer.
+     */
+    static boolean asksForTransport(String title, String text, String classNames) {
+        String[] words = { "transport" };
+        return mentions(title, words) || mentions(classNames, words)
+                || mentions(text, new String[] { "transport request", "transportauftrag" });
     }
 
     private static boolean mentions(String where, String[] words) {
@@ -340,8 +358,18 @@ final class Dialogs {
         StringBuilder text = new StringBuilder();
         JsonArray buttons = new JsonArray();
         JsonArray options = new JsonArray();
+        JsonArray tables = new JsonArray();
+        JsonArray fields = new JsonArray();
         Button defaultButton = shell.getDefaultButton();
         for (Control control : controls(shell)) {
+            if (isChoice(control)) {
+                tables.add(describeChoice(control, tables.size()));
+                continue;
+            }
+            if (isField(control)) {
+                fields.add(describeField(control, fields.size()));
+                continue;
+            }
             if (control instanceof Button button) {
                 String label = plain(button.getText());
                 if (label.isEmpty()) continue;
@@ -362,12 +390,201 @@ final class Dialogs {
         }
         if (text.length() > 0) j.addProperty("text", text.toString());
         // After the text is read: a prompt about trust is often told only by what it says.
-        if (isForUserOnly(shell) || asksAboutTrust(shell.getText(), text.toString(), classNames(shell))) {
+        String classNames = classNames(shell);
+        if (isForUserOnly(shell) || asksAboutTrust(shell.getText(), text.toString(), classNames)
+                || asksForTransport(shell.getText(), text.toString(), classNames)) {
             j.addProperty("forUserOnly", true);
         }
         j.add("buttons", buttons);
         if (options.size() > 0) j.add("options", options);
+        if (tables.size() > 0) j.add("tables", tables);
+        if (fields.size() > 0) j.add("fields", fields);
         return j;
+    }
+
+    // ── Tables, trees, lists and input fields ───────────────────────────────────────
+
+    /** Rows listed per table; the rest is counted, not shown. */
+    private static final int MAX_ROWS = 200;
+
+    /** A control that offers rows to choose from: a table, a tree or a list. */
+    static boolean isChoice(Control control) {
+        return control instanceof Table || control instanceof Tree
+                || control instanceof org.eclipse.swt.widgets.List;
+    }
+
+    /** A control to type or pick a value into: an editable text field or a combo. */
+    static boolean isField(Control control) {
+        return (control instanceof Text field && (field.getStyle() & SWT.READ_ONLY) == 0
+                && field.getEnabled())
+                || control instanceof Combo;
+    }
+
+    /** The dialog's tables, trees and lists, in layout order. UI thread only. */
+    static List<Control> choices(Shell shell) {
+        List<Control> out = new ArrayList<>();
+        for (Control control : controls(shell)) {
+            if (isChoice(control)) out.add(control);
+        }
+        return out;
+    }
+
+    /** The dialog's editable text fields and combos, in layout order. UI thread only. */
+    static List<Control> fields(Shell shell) {
+        List<Control> out = new ArrayList<>();
+        for (Control control : controls(shell)) {
+            if (isField(control)) out.add(control);
+        }
+        return out;
+    }
+
+    /**
+     * The rows of a table or tree in the order they are numbered: a tree's items depth first,
+     * the children of an expanded item after it. A list's rows are its strings, so it has no
+     * items; it answers with an empty list and is numbered by index. UI thread only.
+     */
+    static List<Item> rowsOf(Control control) {
+        List<Item> rows = new ArrayList<>();
+        if (control instanceof Table table) {
+            for (TableItem item : table.getItems()) rows.add(item);
+        } else if (control instanceof Tree tree) {
+            for (TreeItem item : tree.getItems()) addTreeRows(item, rows);
+        }
+        return rows;
+    }
+
+    private static void addTreeRows(TreeItem item, List<Item> rows) {
+        rows.add(item);
+        if (item.getExpanded()) {
+            for (TreeItem child : item.getItems()) addTreeRows(child, rows);
+        }
+    }
+
+    private static JsonObject describeChoice(Control control, int index) {
+        JsonObject t = new JsonObject();
+        t.addProperty("table", index);
+        if (!control.getEnabled()) t.addProperty("enabled", false);
+        if (control instanceof org.eclipse.swt.widgets.List list) {
+            t.addProperty("kind", "list");
+            JsonArray rows = new JsonArray();
+            String[] items = list.getItems();
+            for (int i = 0; i < items.length && i < MAX_ROWS; i++) {
+                JsonObject r = new JsonObject();
+                r.addProperty("row", i);
+                r.addProperty("text", items[i]);
+                if (list.isSelected(i)) r.addProperty("selected", true);
+                rows.add(r);
+            }
+            t.add("rows", rows);
+            if (items.length > MAX_ROWS) t.addProperty("moreRows", items.length - MAX_ROWS);
+            return t;
+        }
+
+        JsonArray columns = new JsonArray();
+        int columnCount = 0;
+        Set<Item> selected = new HashSet<>();
+        if (control instanceof Table table) {
+            t.addProperty("kind", "table");
+            columnCount = table.getColumnCount();
+            for (var column : table.getColumns()) columns.add(column.getText());
+            for (TableItem item : table.getSelection()) selected.add(item);
+        } else if (control instanceof Tree tree) {
+            t.addProperty("kind", "tree");
+            columnCount = tree.getColumnCount();
+            for (var column : tree.getColumns()) columns.add(column.getText());
+            for (TreeItem item : tree.getSelection()) selected.add(item);
+        }
+        if (columns.size() > 0) t.add("columns", columns);
+
+        List<Item> items = rowsOf(control);
+        JsonArray rows = new JsonArray();
+        for (int i = 0; i < items.size() && i < MAX_ROWS; i++) {
+            Item item = items.get(i);
+            JsonObject r = new JsonObject();
+            r.addProperty("row", i);
+            if (columnCount <= 1) {
+                r.addProperty("text", item.getText());
+            } else {
+                JsonArray cells = new JsonArray();
+                for (int c = 0; c < columnCount; c++) {
+                    cells.add(item instanceof TableItem ti ? ti.getText(c) : ((TreeItem) item).getText(c));
+                }
+                r.add("cells", cells);
+            }
+            if (item instanceof TreeItem treeItem) {
+                int level = 0;
+                for (TreeItem p = treeItem.getParentItem(); p != null; p = p.getParentItem()) level++;
+                if (level > 0) r.addProperty("level", level);
+                if (treeItem.getItemCount() > 0 && !treeItem.getExpanded()) r.addProperty("collapsed", true);
+            }
+            if (selected.contains(item)) r.addProperty("selected", true);
+            rows.add(r);
+        }
+        t.add("rows", rows);
+        if (items.size() > MAX_ROWS) t.addProperty("moreRows", items.size() - MAX_ROWS);
+        return t;
+    }
+
+    private static JsonObject describeField(Control control, int index) {
+        JsonObject f = new JsonObject();
+        f.addProperty("field", index);
+        if (control instanceof Text field) {
+            f.addProperty("kind", "text");
+            f.addProperty("value", field.getText());
+            if (field.getMessage() != null && !field.getMessage().isEmpty()) f.addProperty("hint", field.getMessage());
+        } else if (control instanceof Combo combo) {
+            f.addProperty("kind", (combo.getStyle() & SWT.READ_ONLY) != 0 ? "choice" : "combo");
+            f.addProperty("value", combo.getText());
+            JsonArray items = new JsonArray();
+            for (String item : combo.getItems()) items.add(item);
+            f.add("items", items);
+        }
+        if (!control.getEnabled()) f.addProperty("enabled", false);
+        String label = labelBefore(control);
+        if (label != null) f.addProperty("label", label);
+        return f;
+    }
+
+    /** The text of the label laid out just before a control, which usually names it. */
+    private static String labelBefore(Control control) {
+        Control[] siblings = control.getParent().getChildren();
+        for (int i = 0; i < siblings.length; i++) {
+            if (siblings[i] != control) continue;
+            for (int j = i - 1; j >= 0; j--) {
+                if (siblings[j] instanceof Label label && (label.getStyle() & SWT.SEPARATOR) == 0) {
+                    String text = plain(label.getText()).trim();
+                    return text.isEmpty() ? null : text;
+                }
+                if (!(siblings[j] instanceof Label)) return null;
+            }
+        }
+        return null;
+    }
+
+    /** The radio buttons and checkboxes of a dialog, in layout order. UI thread only. */
+    static List<Button> optionButtons(Shell shell) {
+        List<Button> out = new ArrayList<>();
+        for (Control control : controls(shell)) {
+            if (control instanceof Button button && (button.getStyle() & (SWT.CHECK | SWT.RADIO)) != 0
+                    && !plain(button.getText()).isEmpty()) {
+                out.add(button);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * The modal dialog in front, the one the user can click while it is open, or null when
+     * none is open. UI thread only.
+     */
+    static Shell frontModal(Display display) {
+        Shell found = null;
+        for (Shell shell : open(display)) {
+            if ((shell.getStyle() & MODAL) == 0 || blockedBy(shell) != null) continue;
+            if (shell == display.getActiveShell()) return shell;
+            found = shell;
+        }
+        return found;
     }
 
     /** The dialog's push buttons that carry a label, in layout order. UI thread only. */

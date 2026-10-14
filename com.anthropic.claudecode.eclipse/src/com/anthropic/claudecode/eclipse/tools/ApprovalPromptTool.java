@@ -53,6 +53,12 @@ public class ApprovalPromptTool implements McpTool {
         String toolName = (params.has("tool_name") && params.get("tool_name").isJsonPrimitive())
                 ? params.get("tool_name").getAsString() : "tool";
         JsonElement input = params.has("input") ? params.get("input") : new JsonObject();
+        if (EclipseDialogTool.isReadOnlyCall(toolName, input)) {
+            JsonObject resp = new JsonObject();
+            resp.addProperty("behavior", "allow");
+            resp.add("updatedInput", input);
+            return McpToolResult.success(resp.toString());
+        }
 
         // For edits, compute the would-be file content so the GUI can open a diff
         // preview while the decision card is shown.
@@ -91,6 +97,12 @@ public class ApprovalPromptTool implements McpTool {
             JsonObject o = input.getAsJsonObject();
             for (String k : new String[]{"file_path", "old_file_path", "path", "filePath", "command", "url"}) {
                 if (o.has(k) && o.get(k).isJsonPrimitive()) return o.get(k).getAsString();
+            }
+            // Claude Code ADT: a tool with none of those (eclipseDialog's press, adtCommand) is
+            // shown with its arguments, so the user sees what is to be pressed or run.
+            if (o.size() > 0) {
+                String args = o.toString();
+                return args.length() <= 300 ? args : args.substring(0, 300) + "…";
             }
         }
         return "";

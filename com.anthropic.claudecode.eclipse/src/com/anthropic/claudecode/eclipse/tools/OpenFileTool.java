@@ -4,12 +4,14 @@ import java.nio.file.Path;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.texteditor.ITextEditor;
 
+import com.anthropic.claudecode.eclipse.editor.EditorParts;
 import com.anthropic.claudecode.eclipse.editor.UiHelper;
 import com.anthropic.claudecode.eclipse.mcp.McpTool;
 import com.anthropic.claudecode.eclipse.mcp.McpToolResult;
@@ -77,10 +79,22 @@ public class OpenFileTool implements McpTool {
                     return McpToolResult.error("No active workbench page");
                 }
 
-                IFileStore fileStore = EFS.getLocalFileSystem().getStore(Path.of(filePath).toUri());
-                IEditorPart editor = IDE.openEditorOnFileStore(page, fileStore);
+                // An open editor, a workspace file (an ABAP source's semanticfs: URI, which no
+                // disk path reaches) or else a file on disk.
+                IEditorPart editor = EditorTargets.findOpen(page, filePath);
+                if (editor != null) {
+                    page.activate(editor);
+                } else {
+                    IFile file = EditorTargets.resolveFile(filePath);
+                    if (file != null) {
+                        editor = IDE.openEditor(page, file, true);
+                    } else {
+                        IFileStore fileStore = EFS.getLocalFileSystem().getStore(Path.of(filePath).toUri());
+                        editor = IDE.openEditorOnFileStore(page, fileStore);
+                    }
+                }
 
-                if (editor instanceof ITextEditor textEditor && line > 0) {
+                if (EditorParts.textEditorOf(editor) instanceof ITextEditor textEditor && line > 0) {
                     IDocument doc = textEditor.getDocumentProvider().getDocument(textEditor.getEditorInput());
                     if (doc != null) {
                         int lineOffset = doc.getLineOffset(line - 1);

@@ -1,8 +1,6 @@
 package com.anthropic.claudecode.eclipse.tools;
 
-import java.nio.file.Path;
-
-import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 
 import com.anthropic.claudecode.eclipse.editor.UiHelper;
@@ -44,7 +42,6 @@ public class CheckDocumentDirtyTool implements McpTool {
     @Override
     public McpToolResult execute(JsonObject params) {
         String targetPath = EditorUtils.requireString(params, "file_path", "filePath");
-        String normalizedTarget = Path.of(targetPath).toAbsolutePath().normalize().toString();
 
         return UiHelper.syncCall(() -> {
             try {
@@ -55,20 +52,14 @@ public class CheckDocumentDirtyTool implements McpTool {
                     return McpToolResult.success(result);
                 }
 
-                for (IEditorReference ref : page.getEditorReferences()) {
-                    try {
-                        var input = ref.getEditorInput();
-                        String editorPath = EditorUtils.getFilePath(input);
-                        if (editorPath != null) {
-                            String normalizedEditor = Path.of(editorPath).toAbsolutePath().normalize().toString();
-                            if (normalizedEditor.equals(normalizedTarget)) {
-                                JsonObject result = new JsonObject();
-                                result.addProperty("isDirty", ref.isDirty());
-                                result.addProperty("filePath", targetPath);
-                                return McpToolResult.success(result);
-                            }
-                        }
-                    } catch (Exception ignored) {}
+                // Found the way the editor tools find an editor, so a semanticfs: URI (ABAP),
+                // which is no disk path, names one too.
+                IEditorPart editor = EditorTargets.findOpen(page, targetPath);
+                if (editor != null) {
+                    JsonObject result = new JsonObject();
+                    result.addProperty("isDirty", editor.isDirty());
+                    result.addProperty("filePath", targetPath);
+                    return McpToolResult.success(result);
                 }
 
                 // File not open in any editor

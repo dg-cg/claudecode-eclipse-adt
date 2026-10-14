@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.Platform;
 
 import com.anthropic.claudecode.eclipse.Activator;
 import com.anthropic.claudecode.eclipse.tools.AcceptDiffTool;
+import com.anthropic.claudecode.eclipse.tools.AdtCommandTool;
 import com.anthropic.claudecode.eclipse.tools.AutoBuildTool;
 import com.anthropic.claudecode.eclipse.tools.BuildTool;
 import com.anthropic.claudecode.eclipse.tools.CheckDocumentDirtyTool;
@@ -14,6 +15,7 @@ import com.anthropic.claudecode.eclipse.tools.ClaudeCodeEclipseTool;
 import com.anthropic.claudecode.eclipse.tools.CleanTool;
 import com.anthropic.claudecode.eclipse.tools.CloseAllDiffTabsTool;
 import com.anthropic.claudecode.eclipse.tools.DebugTool;
+import com.anthropic.claudecode.eclipse.tools.EditEditorTool;
 import com.anthropic.claudecode.eclipse.tools.EclipseCustomizePerspectiveTool;
 import com.anthropic.claudecode.eclipse.tools.EclipseDialogTool;
 import com.anthropic.claudecode.eclipse.tools.EclipseOpenPerspectiveTool;
@@ -33,6 +35,7 @@ import com.anthropic.claudecode.eclipse.tools.OpenDiffTool;
 import com.anthropic.claudecode.eclipse.tools.OpenFileTool;
 import com.anthropic.claudecode.eclipse.tools.ProjectsTool;
 import com.anthropic.claudecode.eclipse.tools.QuickFixTool;
+import com.anthropic.claudecode.eclipse.tools.ReadEditorTool;
 import com.anthropic.claudecode.eclipse.tools.RefactorResourceTool;
 import com.anthropic.claudecode.eclipse.tools.RefreshTool;
 import com.anthropic.claudecode.eclipse.tools.RejectDiffTool;
@@ -73,6 +76,10 @@ public class McpToolRegistry {
         register(new SaveDocumentTool());
         register(new GetDiagnosticsTool());
         register(new CloseAllDiffTabsTool());
+        // Claude Code ADT: reading and changing what an editor holds, for the sources no file
+        // system path reaches (ABAP on semanticfs:). Only org.eclipse.ui and jface.text.
+        register(new ReadEditorTool());
+        register(new EditEditorTool());
         // Unconditional: BuildTool needs only org.eclipse.core.resources, RunAsTool only
         // org.eclipse.debug.{core,ui}, LaunchesTool those plus org.eclipse.ui.console and
         // org.eclipse.jface.text, ErrorLogTool only org.eclipse.core.runtime, DebugTool and
@@ -135,6 +142,8 @@ public class McpToolRegistry {
         }
         if (ToolSupport.installed(TargetPlatformTool.PDE)) register(new TargetPlatformTool());
         if (ToolSupport.installed(MavenUpdateTool.M2E)) register(new MavenUpdateTool());
+        // ADT's commands are reached by id; the tool is offered only where ADT is installed.
+        if (ToolSupport.installed(AdtCommandTool.ADT_ACTIVATION)) register(new AdtCommandTool());
     }
 
     /**

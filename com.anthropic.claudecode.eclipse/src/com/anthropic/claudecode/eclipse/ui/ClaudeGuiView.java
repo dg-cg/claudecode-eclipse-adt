@@ -64,7 +64,7 @@ import com.anthropic.claudecode.eclipse.chat.ChatProcessManager;
  */
 public class ClaudeGuiView extends ViewPart implements IShowInTarget {
 
-    public static final String VIEW_ID = "com.anthropic.claudecode.eclipse.ui.ClaudeGuiView";
+    public static final String VIEW_ID = "com.anthropic.claudecode.eclipse.adt.ui.ClaudeGuiView";
 
     private Browser browser;
     private Composite root;   // the view's root composite — its themed background drives light/dark detection
@@ -1415,7 +1415,7 @@ public class ClaudeGuiView extends ViewPart implements IShowInTarget {
         openTerminalViewFn = new SimpleFunction(browser, "_openTerminalView", a -> {
             try {
                 org.eclipse.ui.PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-                        .showView("com.anthropic.claudecode.eclipse.ui.ClaudeCliView");
+                        .showView("com.anthropic.claudecode.eclipse.adt.ui.ClaudeCliView");
             } catch (Exception ignored) {}
             return null;
         });
@@ -2875,7 +2875,7 @@ public class ClaudeGuiView extends ViewPart implements IShowInTarget {
             if (ctx == null) return;
             if (wanted && dictationKeyActivation == null) {
                 dictationKeyActivation =
-                        ctx.activateContext("com.anthropic.claudecode.eclipse.contexts.guiFocused");
+                        ctx.activateContext("com.anthropic.claudecode.eclipse.adt.contexts.guiFocused");
             } else if (!wanted && dictationKeyActivation != null) {
                 ctx.deactivateContext(dictationKeyActivation);
                 dictationKeyActivation = null;
@@ -3851,7 +3851,7 @@ public class ClaudeGuiView extends ViewPart implements IShowInTarget {
                 }
             } else if (answer == 1) {
                 org.eclipse.ui.dialogs.PreferencesUtil.createPreferenceDialogOn(browser.getShell(),
-                        "com.anthropic.claudecode.eclipse.preferences", null, null).open();
+                        "com.anthropic.claudecode.eclipse.adt.preferences", null, null).open();
             }
         } catch (Exception e) {
             Activator.logError("Failed to show the archived-sessions notice", e);
@@ -4170,7 +4170,7 @@ public class ClaudeGuiView extends ViewPart implements IShowInTarget {
         switch (what) {
             case "prefs":
                 org.eclipse.ui.dialogs.PreferencesUtil.createPreferenceDialogOn(browser.getShell(),
-                        "com.anthropic.claudecode.eclipse.preferences", null, null).open();
+                        "com.anthropic.claudecode.eclipse.adt.preferences", null, null).open();
                 return "ok";
             case "hasMarketplace": {
                 org.eclipse.ui.commands.ICommandService cs = wb.getService(org.eclipse.ui.commands.ICommandService.class);
@@ -4446,6 +4446,9 @@ public class ClaudeGuiView extends ViewPart implements IShowInTarget {
         } catch (Exception e) {
             input = new com.google.gson.JsonObject();
         }
+        if (com.anthropic.claudecode.eclipse.tools.EclipseDialogTool.isReadOnlyCall(toolName, input)) {
+            return "allow";
+        }
         String[] proposal = com.anthropic.claudecode.eclipse.tools.ApprovalPromptTool
                 .proposedContentFor(toolName, input);
         String decision = requestApproval(toolName,
@@ -4480,6 +4483,12 @@ public class ClaudeGuiView extends ViewPart implements IShowInTarget {
                                          String rememberLabel, String tabId,
                                          String controlId) {
         if (allowAllSession) return "allow";
+        // A modal dialog (ADT's transport request, say) blocks the workbench window and the
+        // card with it: the user could not answer, and the dialog waits for the call that
+        // needs the answer. Asked over the dialog instead.
+        String overDialog = com.anthropic.claudecode.eclipse.tools.EclipseDialogTool
+                .approveOverModalDialog(toolName, detail);
+        if (overDialog != null) return overDialog;
         ClaudeGuiView view = active;
         if (view == null || view.browser == null) return "deny";
         String reqId = UUID.randomUUID().toString();
@@ -4546,9 +4555,9 @@ public class ClaudeGuiView extends ViewPart implements IShowInTarget {
     // ── Card key binding (Esc / Ctrl+G under Emacs) ─────────────────────────────────
 
     private static final String CARD_CONTEXT_ID =
-            "com.anthropic.claudecode.eclipse.contexts.cardOpen";
+            "com.anthropic.claudecode.eclipse.adt.contexts.cardOpen";
     private static final String DISMISS_COMMAND_ID =
-            "com.anthropic.claudecode.eclipse.commands.dismissCard";
+            "com.anthropic.claudecode.eclipse.adt.commands.dismissCard";
 
     private static final Object CARD_LOCK = new Object();
     private static int cardDepth;
@@ -4738,7 +4747,7 @@ public class ClaudeGuiView extends ViewPart implements IShowInTarget {
     // ── Find-in-conversation key binding (Ctrl+F by default, rebindable) ────────────
 
     private static final String VIEW_FOCUS_CONTEXT_ID =
-            "com.anthropic.claudecode.eclipse.contexts.guiViewFocus";
+            "com.anthropic.claudecode.eclipse.adt.contexts.guiViewFocus";
 
     /**
      * Activates {@link #VIEW_FOCUS_CONTEXT_ID} through this view's own site, which keeps it

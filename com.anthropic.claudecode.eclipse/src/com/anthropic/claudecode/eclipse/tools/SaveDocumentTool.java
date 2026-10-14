@@ -1,10 +1,7 @@
 package com.anthropic.claudecode.eclipse.tools;
 
-import java.nio.file.Path;
-
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IWorkbenchPage;
 
 import com.anthropic.claudecode.eclipse.editor.UiHelper;
@@ -46,7 +43,6 @@ public class SaveDocumentTool implements McpTool {
     @Override
     public McpToolResult execute(JsonObject params) {
         String targetPath = EditorUtils.requireString(params, "file_path", "filePath");
-        String normalizedTarget = Path.of(targetPath).toAbsolutePath().normalize().toString();
 
         return UiHelper.syncCall(() -> {
             try {
@@ -55,27 +51,24 @@ public class SaveDocumentTool implements McpTool {
                     return McpToolResult.error("No active workbench page");
                 }
 
-                for (IEditorReference ref : page.getEditorReferences()) {
-                    try {
-                        var input = ref.getEditorInput();
-                        String editorPath = EditorUtils.getFilePath(input);
-                        if (editorPath != null) {
-                            String normalizedEditor = Path.of(editorPath).toAbsolutePath().normalize().toString();
-                            if (normalizedEditor.equals(normalizedTarget)) {
-                                IEditorPart editor = ref.getEditor(true);
-                                if (editor != null && editor.isDirty()) {
-                                    editor.doSave(new NullProgressMonitor());
-                                }
-                                JsonObject result = new JsonObject();
-                                result.addProperty("success", true);
-                                result.addProperty("filePath", targetPath);
-                                return McpToolResult.success(result);
-                            }
-                        }
-                    } catch (Exception ignored) {}
+                // Found the way the editor tools find an editor, so a semanticfs: URI (ABAP),
+                // which is no disk path, names one too.
+                IEditorPart editor = EditorTargets.findOpen(page, targetPath);
+                if (editor == null) {
+                    return McpToolResult.error("File not open in editor: " + targetPath);
                 }
-
-                return McpToolResult.error("File not open in editor: " + targetPath);
+                if (editor.isDirty()) {
+                    editor.doSave(new NullProgressMonitor());
+                }
+                JsonObject result = new JsonObject();
+                result.addProperty("success", !editor.isDirty());
+                result.addProperty("filePath", targetPath);
+                if (editor.isDirty()) {
+                    result.addProperty("message", "The editor still has unsaved changes after saving.");
+                }
+                return McpToolResult.success(result);
+            } catch (ToolSupport.Refusal r) {
+                return McpToolResult.error(r.getMessage());
             } catch (Exception e) {
                 return McpToolResult.error("Failed to save document: " + e.getMessage());
             }
