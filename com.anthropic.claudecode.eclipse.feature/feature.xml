@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="com.anthropic.claudecode.eclipse.feature"
-      label="Claude Code for Eclipse IDE (Unofficial)"
+      id="com.anthropic.claudecode.eclipse.adt.feature"
+      label="Claude Code ADT"
       version="3.2.19.qualifier"
       include-sources="true"
-      provider-name="eilonwy06">
+      provider-name="eilonwy06 (fork: Claude Code ADT)">
 
    <description url="https://github.com/eilonwy06/claudecode-eclipse-ide">
+      Claude Code ADT — a fork of Claude Code for Eclipse IDE with tools for
+SAP ABAP Development Tools (ADT): reading and editing the text of open
+editors, including ABAP sources on the semantic file system. Installs and
+runs next to the original plug-in.
+
       Unofficial community port — This is an independent Eclipse IDE
 adaptation of the Claude Code VS Code extension. It is not affiliated
 with, endorsed by, or maintained by Anthropic.
@@ -43,10 +48,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
    </license>
 
-   <url>
-      <discovery label="Marketplace site" url="https://marketplace.eclipse.org/content/claude-code-eclipse-ide"/>
-      <discovery label="Github site" url="https://github.com/eilonwy06/claudecode-eclipse-ide"/>
-   </url>
 
    <requires>
       <import plugin="org.eclipse.terminal.control" version="1.0.0" match="compatible"/>
@@ -55,7 +56,7 @@ SOFTWARE.
    </requires>
 
    <plugin
-         id="com.anthropic.claudecode.eclipse"
+         id="com.anthropic.claudecode.eclipse.adt"
          version="0.0.0"/>
 
 </feature>

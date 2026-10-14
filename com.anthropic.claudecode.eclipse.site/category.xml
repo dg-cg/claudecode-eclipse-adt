@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature id="com.anthropic.claudecode.eclipse.feature">
-      <category name="com.anthropic.claudecode.eclipse.category"/>
+   <feature id="com.anthropic.claudecode.eclipse.adt.feature">
+      <category name="com.anthropic.claudecode.eclipse.adt.category"/>
    </feature>
-   <category-def name="com.anthropic.claudecode.eclipse.category" label="Claude Code for Eclipse IDE (Unofficial)">
+   <category-def name="com.anthropic.claudecode.eclipse.adt.category" label="Claude Code ADT">
       <description>
-         Unofficial community plugin integrating Claude Code AI assistant into Eclipse IDE.
-         Not affiliated with or endorsed by Anthropic.
+         Fork of the unofficial Claude Code for Eclipse IDE plug-in with tools for SAP ABAP Development Tools.
+         Not affiliated with or endorsed by Anthropic or SAP.
       </description>
    </category-def>
 </site>

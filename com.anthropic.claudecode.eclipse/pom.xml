@@ -3,11 +3,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>com.anthropic.claudecode.eclipse</groupId>
-		<artifactId>claudecode-eclipse-parent</artifactId>
+		<groupId>com.anthropic.claudecode.eclipse.adt</groupId>
+		<artifactId>claudecode-eclipse-adt-parent</artifactId>
 		<version>3.2.19-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<artifactId>com.anthropic.claudecode.eclipse</artifactId>
+	<artifactId>com.anthropic.claudecode.eclipse.adt</artifactId>
 	<packaging>eclipse-plugin</packaging>
 </project>

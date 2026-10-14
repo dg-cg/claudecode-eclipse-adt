@@ -32,10 +32,10 @@ import com.anthropic.claudecode.eclipse.Constants;
 public class DebugModeSourceProvider extends AbstractSourceProvider {
 
     /** Must match the variable name declared in plugin.xml. */
-    public static final String VARIABLE = "com.anthropic.claudecode.eclipse.debugMode";
+    public static final String VARIABLE = "com.anthropic.claudecode.eclipse.adt.debugMode";
 
     /** Must match the variable name declared in plugin.xml. */
-    public static final String CODE_VIEW_VARIABLE = "com.anthropic.claudecode.eclipse.codeViewEnabled";
+    public static final String CODE_VIEW_VARIABLE = "com.anthropic.claudecode.eclipse.adt.codeViewEnabled";
 
     private final IPropertyChangeListener prefListener = new IPropertyChangeListener() {
         @Override

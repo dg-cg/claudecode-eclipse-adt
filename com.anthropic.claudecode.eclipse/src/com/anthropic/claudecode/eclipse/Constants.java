@@ -6,10 +6,12 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 public final class Constants {
 
-    public static final String PLUGIN_ID = "com.anthropic.claudecode.eclipse";
+    public static final String PLUGIN_ID = "com.anthropic.claudecode.eclipse.adt";
     public static final String MCP_VERSION = "2024-11-05";
     public static final String LOCK_FILE_VERSION = "0.2.0";
-    public static final String IDE_NAME = "Eclipse";
+    /** The name Claude Code shows for this IDE (in /ide, among others). Not the original
+     *  plug-in's "Eclipse", so the two can be told apart when both are installed. */
+    public static final String IDE_NAME = "Eclipse (ADT)";
 
     public static final int PORT_RANGE_MIN = 10000;
     public static final int PORT_RANGE_MAX = 65535;

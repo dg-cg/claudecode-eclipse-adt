@@ -1,7 +1,7 @@
 package com.anthropic.claudecode.eclipse;
 
 /**
- * JNI bridge to the Rust native core library (claude_eclipse_core).
+ * JNI bridge to the Rust native core library (claude_eclipse_adt_core).
  *
  * The library handles:
  *   - HTTP + SSE server (tokio + axum)
@@ -44,7 +44,7 @@ public final class NativeCore {
      */
     private static void loadNativeLibrary() {
         try {
-            System.loadLibrary("claude_eclipse_core");
+            System.loadLibrary("claude_eclipse_adt_core");
             return;
         } catch (UnsatisfiedLinkError ignored) {}
 
@@ -61,7 +61,7 @@ public final class NativeCore {
             }
             String suffix = resourcePath.substring(resourcePath.lastIndexOf('.'));
             java.nio.file.Path tmp =
-                java.nio.file.Files.createTempFile("claude_eclipse_core", suffix);
+                java.nio.file.Files.createTempFile("claude_eclipse_adt_core", suffix);
             tmp.toFile().deleteOnExit();
             java.nio.file.Files.copy(in, tmp,
                 java.nio.file.StandardCopyOption.REPLACE_EXISTING);
@@ -77,7 +77,7 @@ public final class NativeCore {
         String arch = System.getProperty("os.arch",  "").toLowerCase(java.util.Locale.ROOT);
         String dir  = nativeArchDir(arch);
         if (dir == null) return null;
-        if (os.contains("linux")) return "/native/linux/" + dir + "/libclaude_eclipse_core.so";
+        if (os.contains("linux")) return "/native/linux/" + dir + "/libclaude_eclipse_adt_core.so";
 
         // Linux is the only riscv64 build, because Eclipse itself publishes a
         // riscv64 IDE for Linux and for nothing else.  Without this guard a
@@ -86,9 +86,9 @@ public final class NativeCore {
         // rather than reporting the platform as unsupported.
         if ("riscv64".equals(dir)) return null;
 
-        if (os.contains("win"))     return "/native/windows/" + dir + "/claude_eclipse_core.dll";
-        if (os.contains("mac"))     return "/native/macos/"   + dir + "/libclaude_eclipse_core.dylib";
-        if (os.contains("freebsd")) return "/native/freebsd/" + dir + "/libclaude_eclipse_core.so";
+        if (os.contains("win"))     return "/native/windows/" + dir + "/claude_eclipse_adt_core.dll";
+        if (os.contains("mac"))     return "/native/macos/"   + dir + "/libclaude_eclipse_adt_core.dylib";
+        if (os.contains("freebsd")) return "/native/freebsd/" + dir + "/libclaude_eclipse_adt_core.so";
         return null;
     }
 

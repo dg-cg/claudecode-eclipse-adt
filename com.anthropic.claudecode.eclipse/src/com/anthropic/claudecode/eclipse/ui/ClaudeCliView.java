@@ -114,16 +114,16 @@ import com.anthropic.claudecode.eclipse.status.StandaloneStatusForwarder;
  */
 public class ClaudeCliView extends ViewPart implements IShowInTarget {
 
-    public static final String VIEW_ID = "com.anthropic.claudecode.eclipse.ui.ClaudeCliView";
+    public static final String VIEW_ID = "com.anthropic.claudecode.eclipse.adt.ui.ClaudeCliView";
 
     private static final boolean IS_WINDOWS = Activator.isWindows();
 
     /** Font definition ID from plugin.xml (Colors and Fonts preference). */
-    private static final String FONT_ID = "com.anthropic.claudecode.eclipse.font.console";
+    private static final String FONT_ID = "com.anthropic.claudecode.eclipse.adt.font.console";
 
     /** Color definition IDs from plugin.xml (Colors and Fonts > Claude Code). */
-    private static final String COLOR_BG_ID = "com.anthropic.claudecode.eclipse.color.terminalBackground";
-    private static final String COLOR_FG_ID = "com.anthropic.claudecode.eclipse.color.terminalForeground";
+    private static final String COLOR_BG_ID = "com.anthropic.claudecode.eclipse.adt.color.terminalBackground";
+    private static final String COLOR_FG_ID = "com.anthropic.claudecode.eclipse.adt.color.terminalForeground";
     // Fallbacks matching the plugin.xml defaults, used only if the theme registry is unavailable.
     private static final RGB DEFAULT_BG = new RGB(0x12, 0x13, 0x14);
     private static final RGB DEFAULT_FG = new RGB(0xE5, 0xE5, 0xE5);
@@ -135,7 +135,7 @@ public class ClaudeCliView extends ViewPart implements IShowInTarget {
      * uses it consistently.
      */
     private static final String TERMINAL_FONT_KEY =
-            "com.anthropic.claudecode.eclipse.terminalFont";
+            "com.anthropic.claudecode.eclipse.adt.terminalFont";
 
     /** Stable extension ID of the local-process terminal connector. */
     private static final String LOCAL_CONNECTOR_ID =

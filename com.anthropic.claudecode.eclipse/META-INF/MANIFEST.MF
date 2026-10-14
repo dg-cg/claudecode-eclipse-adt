@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Claude Code for Eclipse IDE (Unofficial)
-Bundle-SymbolicName: com.anthropic.claudecode.eclipse;singleton:=true
+Bundle-Name: Claude Code ADT
+Bundle-SymbolicName: com.anthropic.claudecode.eclipse.adt;singleton:=true
 Bundle-Version: 3.2.19.qualifier
 Bundle-Activator: com.anthropic.claudecode.eclipse.Activator
 Bundle-Vendor: eilonwy06
@@ -44,27 +44,24 @@ Import-Package: org.junit.jupiter.api;resolution:=optional,
  org.junit.jupiter.params;resolution:=optional,
  org.junit.jupiter.params.provider;resolution:=optional
 Bundle-ClassPath: .
-Bundle-NativeCode: native/windows/x86_64/claude_eclipse_core.dll;
+Bundle-NativeCode: native/windows/x86_64/claude_eclipse_adt_core.dll;
  osname=Win32;processor=x86-64,
- native/windows/aarch64/claude_eclipse_core.dll;
+ native/windows/aarch64/claude_eclipse_adt_core.dll;
  osname=Win32;processor=aarch64,
- native/linux/x86_64/libclaude_eclipse_core.so;
+ native/linux/x86_64/libclaude_eclipse_adt_core.so;
  osname=Linux;processor=x86-64,
- native/linux/aarch64/libclaude_eclipse_core.so;
+ native/linux/aarch64/libclaude_eclipse_adt_core.so;
  osname=Linux;processor=aarch64,
- native/linux/riscv64/libclaude_eclipse_core.so;
+ native/linux/riscv64/libclaude_eclipse_adt_core.so;
  osname=Linux;processor=riscv64,
- native/macos/x86_64/libclaude_eclipse_core.dylib;
+ native/macos/x86_64/libclaude_eclipse_adt_core.dylib;
  osname=MacOS X;processor=x86-64,
- native/macos/aarch64/libclaude_eclipse_core.dylib;
+ native/macos/aarch64/libclaude_eclipse_adt_core.dylib;
  osname=MacOS X;processor=aarch64,
- native/freebsd/x86_64/libclaude_eclipse_core.so;
+ native/freebsd/x86_64/libclaude_eclipse_adt_core.so;
  osname=FreeBSD;processor=x86-64,
- native/freebsd/aarch64/libclaude_eclipse_core.so;
+ native/freebsd/aarch64/libclaude_eclipse_adt_core.so;
  osname=FreeBSD;processor=aarch64
 Bundle-RequiredExecutionEnvironment: JavaSE-21
-Automatic-Module-Name: com.anthropic.claudecode.eclipse
+Automatic-Module-Name: com.anthropic.claudecode.eclipse.adt
 Bundle-ActivationPolicy: lazy
-Export-Package: com.anthropic.claudecode.eclipse,
- com.anthropic.claudecode.eclipse.mcp,
- com.anthropic.claudecode.eclipse.server

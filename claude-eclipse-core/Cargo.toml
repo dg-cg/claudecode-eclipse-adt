@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "claude_eclipse_core"
+name = "claude_eclipse_adt_core"
 crate-type = ["cdylib"]
 
 [dependencies]

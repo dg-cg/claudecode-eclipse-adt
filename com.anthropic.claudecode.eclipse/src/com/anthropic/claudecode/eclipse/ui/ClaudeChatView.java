@@ -20,7 +20,7 @@ import com.anthropic.claudecode.eclipse.chat.ChatProcessManager;
 
 public class ClaudeChatView extends ViewPart {
 
-    public static final String VIEW_ID = "com.anthropic.claudecode.eclipse.ui.ClaudeChatView";
+    public static final String VIEW_ID = "com.anthropic.claudecode.eclipse.adt.ui.ClaudeChatView";
 
     private Browser browser;
     private long browserHwnd = 0;

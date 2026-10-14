@@ -56,8 +56,8 @@ final class TerminalScrollbar {
     private static final class Gtk {
 
         /** Widget data keys under which a bar remembers the GtkCssProviders we gave it. */
-        private static final String PROVIDER_KEY = "com.anthropic.claudecode.eclipse.cssProvider";
-        private static final String CONTAINER_KEY = "com.anthropic.claudecode.eclipse.cssProvider.container";
+        private static final String PROVIDER_KEY = "com.anthropic.claudecode.eclipse.adt.cssProvider";
+        private static final String CONTAINER_KEY = "com.anthropic.claudecode.eclipse.adt.cssProvider.container";
 
         /** Sets both of {@code widget}'s scrollbars into {@code background}. */
         private static void paint(Scrollable widget, RGB background) {

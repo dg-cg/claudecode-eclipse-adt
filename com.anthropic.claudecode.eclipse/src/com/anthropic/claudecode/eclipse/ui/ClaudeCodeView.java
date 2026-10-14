@@ -30,7 +30,7 @@ import com.anthropic.claudecode.eclipse.editor.UiHelper;
 
 public class ClaudeCodeView extends ViewPart {
 
-    public static final String VIEW_ID = "com.anthropic.claudecode.eclipse.ui.ClaudeCodeView";
+    public static final String VIEW_ID = "com.anthropic.claudecode.eclipse.adt.ui.ClaudeCodeView";
 
     private static final int INDICATOR_SIZE = 12;
 
