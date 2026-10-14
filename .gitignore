@@ -33,3 +33,6 @@ ehthumbs.db
 *.iml
 .vscode/
 .claude/
+
+# local build (build-local.ps1)
+build-local/
