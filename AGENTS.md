@@ -50,7 +50,8 @@ wir bereits gestoßen sind. Lies beide, bevor du etwas änderst.
 | `…/native/` | Vorkompilierte Bibliotheken `claude_eclipse_adt_core.*` (aus dem 3.2.18-Release-Jar) |
 | `claude-eclipse-core/` | Rust-Quellen der nativen Bibliothek (hier nicht baubar) |
 | `….feature/`, `….site/` | Feature und Update-Site für den Tycho-Build |
-| `build-local.ps1` | Lokaler Build ohne Maven/Netzwerk; Installation; Offline-Update-Site |
+| `build-tycho.ps1` | Der echte Build mit Maven/Tycho (wie die Upstream-CI) |
+| `build-local.ps1` | Notbehelf ohne Maven/Netzwerk; Installation in `dropins`; Offline-Update-Site |
 | `scripts/mcp-probe.ps1` | Ruft ein Tool des laufenden Plugins direkt auf (zum Testen) |
 | `scripts/install-on-exit.ps1` | Installiert den neuesten Build in `dropins`, sobald Eclipse beendet ist |
 
@@ -66,7 +67,12 @@ weiß. Formuliere sie so, dass das Modell das Tool richtig benutzt.
 - **Eclipse mit ADT:** `C:\ADT\eclipse` (4.41, Java 25 über JustJ). Workspace:
   `C:\ADT\workspace`. Das Repository liegt unter `C:\ADT\workspace\claudecode-eclipse-adt`.
 - **JDK:** das JustJ-JDK in `C:\ADT\eclipse\plugins\org.eclipse.justj.openjdk.hotspot.jre.full.*\jre`
-  (enthält `javac`, `jar`, `jstack`). Maven und `cargo` gibt es nicht.
+  (enthält `javac`, `jar`, `jstack`). Außerdem gibt es Oracle JDK 23 unter
+  `C:\Program Files\Java\jdk-23`. `cargo` gibt es nicht.
+- **Maven:** `C:\maven\apache-maven-3.9.16` für den Tycho-Build. `C:\maven\apache-maven-3.10.0`
+  funktioniert **nicht**: `tycho-surefire` scheitert dort mit „Invalid Collect Request“, und
+  der Upstream legt 3.9.16 deshalb fest. `C:\maven\tycho-tycho-5.0.4` ist nur der Quellcode
+  von Tycho und wird nicht gebraucht, denn Maven lädt Tycho aus Maven Central.
 - **Git:** `C:\git\bin\git.exe` (portabel, nicht im `PATH`).
 - **Shell:** Windows PowerShell 5.1 (siehe Fallstricke).
 - **Netzwerk:** GitHub über `git` funktioniert. Direkte HTTP-Aufrufe ohne Client sind
@@ -76,6 +82,26 @@ weiß. Formuliere sie so, dass das Modell das Tool richtig benutzt.
   als eigenen Prozess (`Start-Process`).
 
 ## Bauen, installieren, verteilen
+
+**Der echte Build ist Tycho**, wie in der Upstream-CI:
+
+```powershell
+.\build-tycho.ps1                 # clean verify -DskipTests mit Maven 3.9.16 und JDK 23
+```
+
+- Er braucht Netzwerk (Maven Central, download.eclipse.org, PyDev bei SourceForge). Das
+  funktioniert hier ohne Proxy-Einstellungen. Die Target-Plattform landet beim ersten Lauf
+  in `%USERPROFILE%\.m2`, danach dauert der Build etwa 20 Sekunden.
+- Er kompiliert alles, auch die Resolver für CDT und PyDev. Ein Tycho-Build ist deshalb der
+  Maßstab dafür, ob der Code kompiliert.
+- Das Skript kopiert vorher wie die CI die Rust-Quellen nach `…/src/core` (git-ignoriert).
+- Ergebnisse: `com.anthropic.claudecode.eclipse\target\*.jar` und
+  `com.anthropic.claudecode.eclipse.site\target\*.zip` (Update-Site mit Feature und Plugin).
+
+**`build-local.ps1` ist der Notbehelf ohne Netzwerk und ohne Maven.** Er kompiliert gegen die
+lokale Eclipse-Installation, lässt die Resolver für CDT/PyDev weg, kann in `dropins`
+installieren und erzeugt eine Offline-Update-Site, die auch die Terminal-Bundles und Gson
+enthält:
 
 ```powershell
 .\build-local.ps1                 # baut build-local\com.anthropic.claudecode.eclipse.adt_<version>.jar
@@ -168,7 +194,8 @@ weiß. Formuliere sie so, dass das Modell das Tool richtig benutzt.
   4. Neue IDs in `plugin.xml` mit `.adt` versehen (Regel 2).
   5. Neue Java-ID-Strings ebenso.
   6. Neue globale Tastenkürzel entfernen (Regel 3).
-  7. `build-local.ps1` laufen lassen.
+  7. `build-tycho.ps1` laufen lassen und danach `build-local.ps1`, das zusätzlich die
+     Exporte der nativen Bibliothek prüft.
 
 ## Offene Punkte
 

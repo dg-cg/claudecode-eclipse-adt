@@ -49,8 +49,20 @@ Ziel-Eclipse: Java 21 oder neuer und eine Eclipse-Version mit den Terminal-Bundl
 **Nicht** gleichzeitig über `dropins` und die Update-Site installieren: Beides ist dasselbe
 Singleton-Bundle.
 
-Der Tycho-Build (`mvn verify`) funktioniert weiterhin, braucht aber Maven und Netzwerkzugriff
-auf die p2-Repositories aus `claudecode.target`.
+### Tycho-Build (mit Maven und Netzwerk)
+
+```powershell
+.\build-tycho.ps1
+```
+
+Das ist der Build wie in der Upstream-CI: Maven **3.9.16**, denn 3.10 scheitert an
+`tycho-surefire`, dazu ein JDK ab 21 und Zugriff auf Maven Central und die p2-Repositories
+aus `claudecode.target`. Pfade für Maven und JDK lassen sich mit `-MavenHome` und
+`-JavaHome` ändern. Ergebnis ist unter anderem
+`com.anthropic.claudecode.eclipse.site\target\com.anthropic.claudecode.eclipse.adt.site-<version>.zip`.
+Diese Update-Site enthält nur Feature und Plugin. Für Rechner ohne Netz, denen
+Terminal-Bundles fehlen könnten, ist die ZIP aus `build-local.ps1 -UpdateSite` die
+sicherere Wahl.
 
 ## Was sich gegenüber dem Original unterscheidet
 
