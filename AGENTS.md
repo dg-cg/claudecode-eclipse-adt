@@ -44,6 +44,7 @@ wir bereits gestoßen sind. Lies beide, bevor du etwas änderst.
 | `…/src/…/tools/` | MCP-Tools; Registrierung in `mcp/McpToolRegistry.java` |
 | `…/tools/EditorTargets.java` | Editor-Suche für alle Editor-Tools: Pfad aus `getOpenEditors` (`semanticfs:/…`), Workspace-Pfad, Plattenpfad oder Titel (`ZCL_FOO`, `[E10] ZCL_FOO`); mehrseitige Editoren (ABAP-Klassen) |
 | `…/tools/ReadEditorTool.java`, `EditEditorTool.java`, `AdtCommandTool.java` | Die ADT-Tools des Forks |
+| `…/tools/AbapElementInfoTool.java` | Element Info (F2) über ADTs REST-Schnittstelle. Erreicht ADT nur per Reflection (`ToolSupport.classOf`/`call`): `IFile` → `IAdtObjectReference` (Adapter aus `com.sap.adt.tools.abapsource`), `IProject` → `IAdtCoreProject.getDestinationId()`, dann `AdtRestResourceFactory…createResourceWithStatelessSession`. Bitte nicht gegen ADT kompilieren, die Tycho-Target-Plattform enthält ADT nicht. |
 | `…/tools/Dialogs.java`, `EclipseDialogTool.java`, `ToolDialogWatch.java` | Dialoge lesen und bedienen, „nur für den Nutzer“, Tool-Aufrufe hinter Dialogen |
 | `…/ui/ClaudeGuiView.java` | View „Claude Code (ADT)“; Freigaben in `requestApproval` |
 | `…/NativeCore.java` | JNI-Brücke zur Rust-Bibliothek (Regel 1 und 4) |

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.eclipse.core.runtime.Platform;
 
 import com.anthropic.claudecode.eclipse.Activator;
+import com.anthropic.claudecode.eclipse.tools.AbapElementInfoTool;
 import com.anthropic.claudecode.eclipse.tools.AcceptDiffTool;
 import com.anthropic.claudecode.eclipse.tools.AdtCommandTool;
 import com.anthropic.claudecode.eclipse.tools.AutoBuildTool;
@@ -144,6 +145,9 @@ public class McpToolRegistry {
         if (ToolSupport.installed(MavenUpdateTool.M2E)) register(new MavenUpdateTool());
         // ADT's commands are reached by id; the tool is offered only where ADT is installed.
         if (ToolSupport.installed(AdtCommandTool.ADT_ACTIVATION)) register(new AdtCommandTool());
+        if (java.util.Arrays.stream(AbapElementInfoTool.BUNDLES).allMatch(ToolSupport::installed)) {
+            register(new AbapElementInfoTool());
+        }
     }
 
     /**
