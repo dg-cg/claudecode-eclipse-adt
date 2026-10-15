@@ -210,8 +210,9 @@ public class AbapElementInfoTool implements McpTool {
         }
     }
 
+    /** A character of an ABAP name; namespaces (/ABC/) included, component selectors not. */
     private static boolean isNameChar(char c) {
-        return Character.isLetterOrDigit(c) || c == '_' || c == '/' || c == '-' || c == '~' || c == '>' || c == '=';
+        return Character.isLetterOrDigit(c) || c == '_' || c == '/';
     }
 
     // ── ADT ────────────────────────────────────────────────────────────────────────
@@ -328,6 +329,7 @@ public class AbapElementInfoTool implements McpTool {
             out.addProperty(name, a.getNodeValue());
         }
         JsonObject properties = new JsonObject();
+        JsonObject documentation = new JsonObject();
         JsonArray children = new JsonArray();
         JsonArray links = new JsonArray();
         for (Node n = e.getFirstChild(); n != null; n = n.getNextSibling()) {
@@ -338,8 +340,13 @@ public class AbapElementInfoTool implements McpTool {
                 case "properties" -> entries(child, properties);
                 case "entry" -> entry(child, properties);
                 case "documentation" -> {
+                    // One per kind: the short text, the ABAP Doc comment, the long text.
                     String text = child.getTextContent().trim();
-                    if (!text.isEmpty()) out.addProperty("documentation", abbreviate(stripTags(text), MAX_DOC_CHARS));
+                    String rel = attribute(child, "rel");
+                    if (!text.isEmpty()) {
+                        documentation.addProperty(rel == null || rel.isEmpty() ? "text" : rel,
+                                abbreviate(stripTags(text), MAX_DOC_CHARS));
+                    }
                 }
                 case "link", "docLink" -> links.add(link(child));
                 case "docLinks", "links" -> {
@@ -362,6 +369,7 @@ public class AbapElementInfoTool implements McpTool {
             }
         }
         if (properties.size() > 0) out.add("properties", properties);
+        if (documentation.size() > 0) out.add("documentation", documentation);
         if (children.size() > 0) out.add("children", children);
         if (links.size() > 0) out.add("links", links);
         return out;
@@ -374,9 +382,11 @@ public class AbapElementInfoTool implements McpTool {
     }
 
     private static void entry(Element entry, JsonObject into) {
-        String key = entry.getAttribute("key");
+        // The key is a namespaced attribute (abapsource:key), so it is looked up by local name.
+        String key = attribute(entry, "key");
         if (key == null || key.isEmpty()) key = localName(entry);
-        into.addProperty(key, entry.getTextContent().trim());
+        String value = entry.getTextContent().trim();
+        if (!value.isEmpty()) into.addProperty(key, value);
     }
 
     private static JsonObject link(Element e) {

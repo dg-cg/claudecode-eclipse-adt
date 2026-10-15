@@ -22,7 +22,9 @@ param(
     [string]$Tool = 'getOpenEditors',
     [string]$ArgsJson = '{}',
     [int]$TimeoutSeconds = 90,
-    [string]$IdeName = 'Eclipse (ADT)'
+    [string]$IdeName = 'Eclipse (ADT)',
+    # How much of each event to print; the reply to a big call can be long.
+    [int]$MaxChars = 3000
 )
 
 if ($Port -eq 0) {
@@ -76,7 +78,7 @@ Post ('{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"' + $Tool
 while ($true) {
     $e = Read-Event $TimeoutSeconds
     if ($null -eq $e) { "$(T) NO REPLY within $TimeoutSeconds s"; break }
-    "$(T) [$($e.type)] $($e.data.Substring(0, [Math]::Min(3000, $e.data.Length)))"
+    "$(T) [$($e.type)] $($e.data.Substring(0, [Math]::Min($MaxChars, $e.data.Length)))"
     if ($e.data -match '"id"\s*:\s*2\b') { break }
 }
 $client.Dispose()
