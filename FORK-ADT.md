@@ -26,8 +26,14 @@ startest Eclipse neu.
 .\build-local.ps1 -UpdateSite      # erzeugt build-local\ClaudeCodeADT-<version>.zip
 ```
 
-Die ZIP-Datei ist eine p2-Update-Site. Sie enthält das Feature, das Plugin sowie die
-Terminal-Bundles und Gson, falls sie im Ziel-Eclipse fehlen. So installiert man sie, auch in
+Die ZIP-Datei ist eine p2-Update-Site. Sie enthält das Feature und das Plugin, dazu alles,
+was im Ziel-Eclipse fehlen könnte: Gson, das **Terminal-Feature** und den nativen PTY-Code
+von CDT (`org.eclipse.cdt.core.native` und das Fragment für Windows x86_64).
+
+Das Feature verlangt das Terminal-Feature als Ganzes (`<import feature=…>`). Das Original
+verlangte nur drei Terminal-Bundles. Deren Connectoren brauchen aber das native
+PTY-Fragment, das nur über das Feature mitkommt. Ohne das Fragment ließ sich das Plugin
+installieren, das Terminal funktionierte dann aber nicht. So installiert man sie, auch in
 Azure Virtual Desktop ohne Zugriff auf das Eclipse-Verzeichnis:
 
 1. *Help > Install New Software… > Add… > Archive…* und die ZIP-Datei wählen.
@@ -60,9 +66,10 @@ Das ist der Build wie in der Upstream-CI: Maven **3.9.16**, denn 3.10 scheitert 
 aus `claudecode.target`. Pfade für Maven und JDK lassen sich mit `-MavenHome` und
 `-JavaHome` ändern. Ergebnis ist unter anderem
 `com.anthropic.claudecode.eclipse.site\target\com.anthropic.claudecode.eclipse.adt.site-<version>.zip`.
-Diese Update-Site enthält nur Feature und Plugin. Für Rechner ohne Netz, denen
-Terminal-Bundles fehlen könnten, ist die ZIP aus `build-local.ps1 -UpdateSite` die
-sicherere Wahl.
+Diese Update-Site enthält neben Feature und Plugin auch das Terminal-Feature und die
+nativen CDT-Fragmente für Windows, Linux und macOS. Siehe `com.anthropic.claudecode.eclipse.site/category.xml`;
+die Fragmente sind dort als Abfrage eingetragen, weil Tycho die Site je Plattform auflöst.
+Gson fehlt in dieser Site, dafür ist die ZIP aus `build-local.ps1 -UpdateSite` gedacht.
 
 ## Was sich gegenüber dem Original unterscheidet
 

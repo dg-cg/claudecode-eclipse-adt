@@ -50,6 +50,12 @@ SOFTWARE.
 
 
    <requires>
+      <!-- The whole Terminal feature, not only the bundles below: its connectors import
+           org.eclipse.cdt.utils.pty with mandatory:=native, which only the platform's CDT
+           native fragment (org.eclipse.cdt.core.win32.x86_64, …) provides, and only the
+           feature asks for that fragment. Without it the plug-in installs but its terminal
+           gets no PTY. -->
+      <import feature="org.eclipse.terminal.feature" version="1.0.0" match="compatible"/>
       <import plugin="org.eclipse.terminal.control" version="1.0.0" match="compatible"/>
       <import plugin="org.eclipse.terminal.connector.process" version="1.0.0" match="compatible"/>
       <import plugin="org.eclipse.terminal.connector.local" version="1.0.0" match="compatible"/>

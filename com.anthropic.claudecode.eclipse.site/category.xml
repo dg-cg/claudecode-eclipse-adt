@@ -3,6 +3,19 @@
    <feature id="com.anthropic.claudecode.eclipse.adt.feature">
       <category name="com.anthropic.claudecode.eclipse.adt.category"/>
    </feature>
+   <!-- Carried along so that the site installs without network: the Terminal feature the
+        plug-in requires, and the CDT native fragments with the PTY that feature imports (one
+        per platform; p2 picks the one that matches). Not in a category, so they do not show
+        as something to choose in Install New Software. The fragments are queried rather than
+        named: the site is resolved per environment (pom.xml), and a named one that is not
+        that environment's would fail the build. -->
+   <feature id="org.eclipse.terminal.feature"/>
+   <bundle id="org.eclipse.cdt.core.native"/>
+   <iu>
+      <query>
+         <expression type="match"><![CDATA[ (id ~= /org.eclipse.cdt.core.win32.*/ || id ~= /org.eclipse.cdt.core.linux.*/ || id == 'org.eclipse.cdt.core.macosx') && !(id ~= /*.source/) ]]></expression>
+      </query>
+   </iu>
    <category-def name="com.anthropic.claudecode.eclipse.adt.category" label="Claude Code ADT">
       <description>
          Fork of the unofficial Claude Code for Eclipse IDE plug-in with tools for SAP ABAP Development Tools.

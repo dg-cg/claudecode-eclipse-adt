@@ -209,12 +209,25 @@ if ($UpdateSite) {
     New-Item -ItemType Directory -Force (Join-Path $siteIn 'plugins'), (Join-Path $siteIn 'features'), $repo | Out-Null
     Copy-Item $jarFile (Join-Path $siteIn 'plugins')
 
-    # The bundles the plug-in needs beyond the platform, from this installation.
-    foreach ($dep in 'org.eclipse.terminal.control', 'org.eclipse.terminal.connector.process',
-                     'org.eclipse.terminal.connector.local', 'com.google.gson') {
-        $depJar = Get-ChildItem $plugins -Filter "$dep`_*.jar" | Sort-Object Name -Descending | Select-Object -First 1
-        if ($depJar) { Copy-Item $depJar.FullName (Join-Path $siteIn 'plugins') }
-        else { Write-Warning "$dep not found in $plugins; the site will not carry it." }
+    # What the plug-in needs beyond the platform, from this installation: Gson, the Terminal
+    # feature (feature.xml requires it) with its bundles, and the CDT native code with the PTY
+    # that feature imports (org.eclipse.cdt.core.native and this platform's fragment). Jar or
+    # folder, as the installation keeps them; the publisher takes both.
+    $features = Join-Path $EclipseHome 'features'
+    $terminalFeature = Get-ChildItem $features -Filter 'org.eclipse.terminal.feature_*' |
+        Sort-Object Name -Descending | Select-Object -First 1
+    if ($terminalFeature) { Copy-Item -Recurse $terminalFeature.FullName (Join-Path $siteIn 'features') }
+    else { Write-Warning "org.eclipse.terminal.feature not found in $features; the site will not carry it." }
+    $deps = @('com.google.gson', 'org.eclipse.terminal.control', 'org.eclipse.terminal.view.core',
+              'org.eclipse.terminal.view.ui', 'org.eclipse.terminal.connector.process',
+              'org.eclipse.terminal.connector.local', 'org.eclipse.terminal.connector.telnet',
+              'org.eclipse.terminal.connector.ssh', 'org.eclipse.cdt.core.native',
+              'org.eclipse.cdt.core.win32.x86_64', 'org.eclipse.cdt.core.win32.aarch64')
+    foreach ($dep in $deps) {
+        $found = Get-ChildItem $plugins | Where-Object { $_.Name -match "^$([regex]::Escape($dep))_[\d]" } |
+            Sort-Object Name -Descending | Select-Object -First 1
+        if ($found) { Copy-Item -Recurse $found.FullName (Join-Path $siteIn 'plugins') }
+        elseif ($dep -notlike '*aarch64') { Write-Warning "$dep not found in $plugins; the site will not carry it." }
     }
 
     # The feature, with the version of this build and the exact version of the plug-in.
@@ -258,7 +271,10 @@ if ($UpdateSite) {
         '-source', $siteIn, '-compress', '-publishArtifacts')
 
     # The category, so that the feature shows under "Claude Code ADT" in Install New Software.
+    # Only our own feature: the Tycho site's category.xml also lists what it carries along
+    # (Terminal, CDT natives), which is published here already and needs no category.
     $categoryXml = [IO.File]::ReadAllText((Join-Path $root 'com.anthropic.claudecode.eclipse.site\category.xml'), $utf8)
+    $categoryXml = [regex]::Replace($categoryXml, '(?s)\s*<!--.*?-->|\s*<feature id="org\.eclipse\.terminal\.feature"/>|\s*<bundle [^>]*/>|\s*<iu>.*?</iu>', '')
     $categoryXml = $categoryXml -replace "(<feature\s+id=""$([regex]::Escape($featureId))"")", "`$1 version=""$version"" url=""features/${featureId}_$version.jar"""
     $categoryFile = Join-Path $out 'category.xml'
     [IO.File]::WriteAllText($categoryFile, $categoryXml, $utf8)
